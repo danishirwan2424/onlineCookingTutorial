@@ -40,6 +40,7 @@ $stmt->close();
 ?>
 <!DOCTYPE html>
 <html>
+
 <head>
     <title>View Recipe</title>
     <link rel="stylesheet" href="style.css">
@@ -79,51 +80,106 @@ $stmt->close();
         }
     </style>
 </head>
+
 <body>
-<?php include 'header.php'; ?>
+    <?php include 'header.php'; ?>
 
-<div class="view-wrapper">
-    <h2><?= htmlspecialchars($recipe['title']) ?></h2>
+    <div class="view-wrapper">
+        <h2><?= htmlspecialchars($recipe['title']) ?></h2>
 
-    <div class="recipe-section">
-        <div class="recipe-label">Ingredients:</div>
-        <div class="recipe-text"><?= nl2br(htmlspecialchars($recipe['ingredient'])) ?></div>
-    </div>
-
-    <div class="recipe-section">
-        <div class="recipe-label">Dietary Type:</div>
-        <div class="recipe-text"><?= htmlspecialchars($recipe['dietary_type']) ?></div>
-    </div>
-
-    <div class="recipe-section">
-        <div class="recipe-label">Cuisine Type:</div>
-        <div class="recipe-text"><?= htmlspecialchars($recipe['cuisine_type']) ?></div>
-    </div>
-
-    <div class="recipe-section">
-        <div class="recipe-label">Instructions:</div>
-        <div class="recipe-text" style="white-space: pre-line;"><?= htmlspecialchars($recipe['step']) ?></div>
-    </div>
-
-    <?php if (!empty($media_files)): ?>
-        <div class="recipe-section media-gallery">
-            <div class="recipe-label">Media:</div>
-            <?php foreach ($media_files as $media): ?>
-                <?php if ($media['media_type'] === 'image'): ?>
-                    <img src="<?= htmlspecialchars($media['file_path']) ?>" alt="Recipe Image">
-                <?php elseif ($media['media_type'] === 'video'): ?>
-                    <video controls>
-                        <source src="<?= htmlspecialchars($media['file_path']) ?>" type="video/mp4">
-                        Your browser does not support the video tag.
-                    </video>
-                <?php endif; ?>
-            <?php endforeach; ?>
+        <div class="recipe-section">
+            <div class="recipe-label">Ingredients:</div>
+            <div class="recipe-text"><?= nl2br(htmlspecialchars($recipe['ingredient'])) ?></div>
         </div>
-    <?php endif; ?>
 
-    <a href="recipe_list.php" class="btn btn-secondary" style="margin-top: 20px; display: inline-block;">Back</a>
-</div>
+        <div class="recipe-section">
+            <div class="recipe-label">Dietary Type:</div>
+            <div class="recipe-text"><?= htmlspecialchars($recipe['dietary_type']) ?></div>
+        </div>
 
-<?php include 'footer.php'; ?>
+        <div class="recipe-section">
+            <div class="recipe-label">Cuisine Type:</div>
+            <div class="recipe-text"><?= htmlspecialchars($recipe['cuisine_type']) ?></div>
+        </div>
+
+        <div class="recipe-section">
+            <div class="recipe-label">Instructions:</div>
+            <div class="recipe-text" style="white-space: pre-line;"><?= htmlspecialchars($recipe['step']) ?></div>
+        </div>
+
+        <?php if (!empty($media_files)): ?>
+            <div class="recipe-section media-gallery">
+                <div class="recipe-label">Media:</div>
+                <?php foreach ($media_files as $media): ?>
+                    <?php if ($media['media_type'] === 'image'): ?>
+                        <img src="<?= htmlspecialchars($media['file_path']) ?>" alt="Recipe Image">
+                    <?php elseif ($media['media_type'] === 'video'): ?>
+                        <video id="recipeVideo" controls>
+                            <source src="<?= htmlspecialchars($media['file_path']) ?>" type="video/mp4">
+                            Your browser does not support the video tag.
+                        </video>
+                    <?php endif; ?>
+
+                <?php endforeach; ?>
+            </div>
+        <?php endif; ?>
+
+        <a href="recipe_list.php" class="btn btn-secondary" style="margin-top: 20px; display: inline-block;">Back</a>
+    </div>
+
+    <?php include 'footer.php'; ?>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const video = document.getElementById("recipeVideo");
+
+            if (!video) return;
+
+            let recognition;
+            let recognizing = false;
+
+            if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                recognition = new SpeechRecognition();
+                recognition.continuous = true;
+                recognition.interimResults = false;
+                recognition.lang = 'en-US';
+
+                recognition.onstart = () => {
+                    recognizing = true;
+                    console.log("Voice control started...");
+                };
+
+                recognition.onend = () => {
+                    recognizing = false;
+                    console.log("Voice control stopped...");
+                };
+
+                recognition.onerror = (event) => {
+                    console.error("Speech recognition error:", event.error);
+                };
+
+                recognition.onresult = (event) => {
+                    for (let i = event.resultIndex; i < event.results.length; i++) {
+                        if (event.results[i].isFinal) {
+                            const transcript = event.results[i][0].transcript.trim().toLowerCase();
+                            console.log("Heard:", transcript);
+
+                            if (transcript.includes("start") || transcript.includes("on")) {
+                                video.play();
+                            } else if (transcript.includes("stop") || transcript.includes("off")) {
+                                video.pause();
+                            }
+                        }
+                    }
+                };
+
+                // Start listening automatically
+                recognition.start();
+            } else {
+                alert("Voice recognition not supported in this browser.");
+            }
+        });
+    </script>
 </body>
+
 </html>

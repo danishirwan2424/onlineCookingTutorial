@@ -2,8 +2,18 @@
 session_start();
 require_once 'db_connect.php';
 
-// Dummy session (replace with real session logic in production)
-$_SESSION['user'] = 1;
+// Dummy login: fetch any valid user from the database
+if (!isset($_SESSION['user'])) {
+    $result = $conn->query("SELECT userID FROM user LIMIT 1");
+
+    if ($result && $result->num_rows > 0) {
+        $row = $result->fetch_assoc();
+        $_SESSION['user'] = $row['userID'];
+    } else {
+        die("No users exist in the database. Please create one.");
+    }
+}
+
 $userID = $_SESSION['user'];
 
 // Get recipeID from query string
