@@ -1,8 +1,8 @@
 <?php
 $host = 'localhost';
-$user = 'root';
-$pass = '';
-$db = 'mmdb';
+$user = 'Group3';
+$pass = 'group3';
+$db = 'p25_mmdb';
 
 $conn = new mysqli($host, $user, $pass, $db);
 
